@@ -59,8 +59,8 @@ function FileSystemStrategy(options) {
     stats = stats.isFile() ? stats : getFolderDates(contentPath);
 
     return {
-      createdAt: stats.birthtime,
-      updatedAt: stats.mtime,
+      createdAt: stats?.birthtime ?? null,
+      updatedAt: stats?.mtime ?? null,
     }
   }
 }
