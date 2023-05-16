@@ -1,9 +1,19 @@
 <article>
   <header>
-    <time>created: {{ dates.createdAt }}</time>
-    <time>updated: {{ dates.updatedAt }}</time>
-    <span>{{ version }}</span>
+    <h1>
+      {{ title }}
+      <sup>{{ version }}</sup>
+    </h1>
+
+    {% if createdAt %}
+      <time>created: {{ createdAt }}</time>
+    {% endif %}
+
+    {% if updatedAt %}
+      <time>updated: {{ updatedAt }}</time>
+    {% endif %}
   </header>
+
   <main>
     {{ content | safe }}
   </main>

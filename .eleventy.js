@@ -1,26 +1,75 @@
+const fs = require('node:fs');
 const path = require('node:path');
-const { FileSystemStrategy } = require('./strategies/file-strategy.js');
-const { GitStrategy } = require('./strategies/git-strategy.js');
+const { runCommand, getFolderCreatedDate, getFolderModifiedDate } = require('./utils.js');
 
-function getContentPath(data) {
-  const inputPath = data?.page?.inputPath;
-  return path.dirname(inputPath);
+const TIMESTAMPS = {
+  'LAST_MODIFIED': 'Last Modified',
+  'CREATED': 'Created',
+  'GIT_LAST_MODIFIED': 'git Last Modified',
+  'GIT_CREATED': 'git Created',
+};
+
+const strategies = {
+  [TIMESTAMPS.LAST_MODIFIED]: function(contentPath) {
+    const stats = fs.statSync(contentPath);
+    return stats.isFile() ? stats.mtime : getFolderModifiedDate(contentPath);
+  },
+
+  [TIMESTAMPS.CREATED]: function(contentPath) {
+    const stats = fs.statSync(contentPath);
+    return stats.isFile() ? stats.birthtime : getFolderCreatedDate(contentPath);
+  },
+
+  [TIMESTAMPS.GIT_LAST_MODIFIED]: function(contentPath) {
+    const date = runCommand(`git --no-pager log -n 1 --format="%ci" ${contentPath}`).trim()
+    return date ? new Date(date) : null;
+  },
+
+  [TIMESTAMPS.GIT_CREATED]: function(contentPath) {
+    const date = runCommand(`git --no-pager log --diff-filter=A --follow -1 --format="%ci" ${contentPath}`).trim()
+    return date ? new Date(date) : null;
+  }
+}
+
+function getContentFolderPath(data) {
+  return path.dirname(data?.page?.inputPath);
+}
+
+function getContentFilePath(data) {
+  return data?.page?.inputPath;
 }
 
 function EleventyPlugin(eleventyConfig, userOptions = {}) {
-  const fieldKey = userOptions.fieldKey ?? 'dates';
-  const getContentPathFunction = userOptions.getContentPath ?? getContentPath;
-  const strategy = userOptions.strategy ?? FileSystemStrategy;
+  const getContentPathFunction = userOptions.getContentPath ?? getContentFilePath;
 
-  eleventyConfig.addGlobalData('eleventyComputed', {
-    [fieldKey]: strategy({
-      getContentPath: getContentPathFunction
-    })
-  });
+  const timestampFields = userOptions.fields ?? ['createdAt', 'updatedAt'];
+
+  const eleventyComputed = {}
+
+  for (const field of timestampFields) {
+    eleventyComputed[field] = function(data) {
+      if (!data[field]) {
+        return;
+      }
+
+      const strategy = strategies[data[field]];
+
+      if (!strategy) {
+        return;
+      }
+
+      const contentPath = getContentPathFunction(data);
+
+      return strategy(contentPath);
+    }
+  }
+
+  eleventyConfig.addGlobalData('eleventyComputed', eleventyComputed);
 }
 
 module.exports = {
   EleventyPluginContentDates: EleventyPlugin,
-  FileSystemStrategy,
-  GitStrategy
+  TIMESTAMPS,
+  getContentFilePath,
+  getContentFolderPath
 }

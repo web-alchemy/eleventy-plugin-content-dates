@@ -1,5 +1,13 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+
+function runCommand(command) {
+  const [bin, ...args] = command.split(' ');
+  return execFileSync(bin, args, {
+    encoding: 'utf-8'
+  });
+}
 
 function* directoryWalk(dirPath) {
   const queue = [dirPath];
@@ -26,8 +34,27 @@ function* directoryWalk(dirPath) {
   }
 }
 
-function getFolderDates(dirPath) {
+// the earliest creation date of all files in the directory
+function getFolderCreatedDate(dirPath) {
   let birthtime = Infinity;
+
+  for (const item of directoryWalk(dirPath)) {
+    if (item.dirent.isDirectory()) {
+      continue;
+    }
+
+    const stats = fs.statSync(item.path);
+
+    if (stats.birthtime < birthtime) {
+      birthtime = stats.birthtime;
+    }
+  }
+
+  return birthtime
+}
+
+// the oldest modified date of all files in the directory
+function getFolderModifiedDate(dirPath) {
   let mtime = -Infinity;
 
   for (const item of directoryWalk(dirPath)) {
@@ -40,31 +67,13 @@ function getFolderDates(dirPath) {
     if (stats.mtime > mtime) {
       mtime = stats.mtime;
     }
-
-    if (stats.birthtime < birthtime) {
-      birthtime = stats.birthtime;
-    }
   }
 
-  return {
-    mtime,
-    birthtime
-  }
-}
-
-function FileSystemStrategy(options) {
-  return function(data) {
-    const contentPath = options.getContentPath(data);
-    let stats = fs.statSync(contentPath);
-    stats = stats.isFile() ? stats : getFolderDates(contentPath);
-
-    return {
-      createdAt: stats?.birthtime ?? null,
-      updatedAt: stats?.mtime ?? null,
-    }
-  }
+  return mtime
 }
 
 module.exports = {
-  FileSystemStrategy
+  runCommand,
+  getFolderCreatedDate,
+  getFolderModifiedDate
 }

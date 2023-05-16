@@ -1,10 +1,9 @@
-const { EleventyPluginContentDates, FileSystemStrategy, GitStrategy } = require('../.eleventy.js');
-
-const isProd = process.env.NODE_ENV === 'production';
+const { EleventyPluginContentDates, getContentFolderPath } = require('../.eleventy.js');
 
 module.exports = function(eleventyConfig) {
   eleventyConfig.addPlugin(EleventyPluginContentDates, {
-    strategy: isProd ? GitStrategy : FileSystemStrategy
+    fields: ['createdAt', 'updatedAt'],
+    getContentPath: getContentFolderPath
   });
 
   return {

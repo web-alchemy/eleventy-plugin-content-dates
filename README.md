@@ -1,6 +1,6 @@
 # eleventy-plugin-content-dates
 
-Eleventy-плагин для вычисления дат создания и изменения файлов на основе данных git или файловой системы.
+Eleventy-плагин для создания пользовательских полей с датами создания и изменения файлов на основе данных git или файловой системы. На данный момент, Eleventy позволяет производить такие вычисления только для одного поля `date`.
 
 ## Установка
 
@@ -13,24 +13,18 @@ npm install @web-alchemy/eleventy-plugin-content-dates
 ```javascript
 const {
   EleventyPluginContentDates,
-  FileSystemStrategy,
-  GitStrategy
+  getContentFolderPath
 } = require('@web-alchemy/eleventy-plugin-content-dates');
-
-const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = function(eleventyConfig) {
   eleventyConfig.addPlugin(EleventyPluginContentDates, {
-    // поле данных, в котором будут находится поля `createdAt` и `updatedAt`, по умолчанию - `dates`
-    fieldKey: 'dates', 
+    // Поля данных, в которые будут подставляться даты, по умолчанию 'createdAt', 'updatedAt'.
+    fields: ['createdAt', 'updatedAt'],
     
-    // стратегия для вычисления дат, по умолчанию - `FileSystemStrategy`
-    strategy: isProd ? GitStrategy : FileSystemStrategy,
-    
-    // функция для уточнения пути для файла или папки, по умолчанию - папка, в которой находится файл
+    // Функция для получения пути файла или папки, для которых будет высичляться дата, по умолчанию - путь до файла
+    // Иногда нужно вычислять даты для папок, так как они могут содержать другие ресурсы, например, картинки. Можно использовать функцию `getContentFolderPath` из состава плагина или написать свою.
     getContentPath: function (data) {
-      const inputPath = data?.page?.inputPath;
-      return require('node:path').dirname(inputPath);
+      return data?.page?.inputPath;
     }
   });
 }
@@ -38,12 +32,30 @@ module.exports = function(eleventyConfig) {
 
 ## Пример использования для шаблонизатора Nunjucks
 
+После того, как в настройках плагина были указаны имена полей, можно указать способы вычисления дат. Плагин использует те же [типы дат](https://www.11ty.dev/docs/dates/), что и Eleventy - `Last Modified`, `Created`, `git Last Modified`, `git Created`.
+
 ```nunjucks
-<time datetime="{{ dates.createdAt.toISOString()}}">
-  {{ dates.createdAt.toLocaleDateString() }}
+---
+createdAt: git Created
+updatedAt: git Last Modified,
+---
+
+<time datetime="{{ createdAt.toISOString()}}">
+  {{ createdAt.toLocaleDateString() }}
 </time>
 
-<time datetime="{{ dates.updatedAt.toISOString()}}">
-  {{ dates.updatedAt.toLocaleDateString() }}
+<time datetime="{{ updatedAt.toISOString()}}">
+  {{ updatedAt.toLocaleDateString() }}
 </time>
+```
+
+Поля удобнее указывать в 11tydata-файлах:
+
+```javascript
+const { TIMESTAMPS } = require('@web-alchemy/eleventy-plugin-content-dates');
+
+module.exports = {
+  createdAt: TIMESTAMPS.GIT_CREATED,
+  updatedAt: TIMESTAMPS.GIT_LAST_MODIFIED
+}
 ```
