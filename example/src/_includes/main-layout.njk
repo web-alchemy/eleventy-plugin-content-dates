@@ -1,0 +1,10 @@
+<article>
+  <header>
+    <time>created: {{ dates.createdAt }}</time>
+    <time>updated: {{ dates.updatedAt }}</time>
+    <span>{{ version }}</span>
+  </header>
+  <main>
+    {{ content | safe }}
+  </main>
+</article>
