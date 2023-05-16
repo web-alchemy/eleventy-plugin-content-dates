@@ -1,5 +1,6 @@
 {
   "scripts": {
-    "start": "eleventy --watch"
+    "start": "eleventy --watch",
+    "start:prod": "NODE_ENV=production eleventy --watch"
   }
 }
