@@ -39,6 +39,25 @@ function getContentFilePath(data) {
   return data?.page?.inputPath;
 }
 
+function computeDate(options) {
+  const {
+    strategy: strategyKey,
+    contentPath
+  } = options;
+
+  const strategy = strategies[strategyKey];
+
+  if (!strategy) {
+    return;
+  }
+
+  if (!contentPath) {
+    return;
+  }
+
+  return strategy(contentPath);
+}
+
 function EleventyPlugin(eleventyConfig, userOptions = {}) {
   const getContentPathFunction = userOptions.getContentPath ?? getContentFilePath;
 
@@ -52,15 +71,10 @@ function EleventyPlugin(eleventyConfig, userOptions = {}) {
         return;
       }
 
-      const strategy = strategies[data[field]];
-
-      if (!strategy) {
-        return;
-      }
-
-      const contentPath = getContentPathFunction(data);
-
-      return strategy(contentPath);
+      return computeDate({
+        strategy: data[field],
+        contentPath: getContentPathFunction(data)
+      })
     }
   }
 
@@ -71,5 +85,6 @@ module.exports = {
   EleventyPluginContentDates: EleventyPlugin,
   TIMESTAMPS,
   getContentFilePath,
-  getContentFolderPath
+  getContentFolderPath,
+  computeDate
 }

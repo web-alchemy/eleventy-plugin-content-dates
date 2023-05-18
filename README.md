@@ -36,7 +36,7 @@ module.exports = function(eleventyConfig) {
 }
 ```
 
-## Usage exmaple
+## Usage example
 
 After the field names have been specified in the plugin settings (By default it is `createdAt`, `updatedAt`), you can specify the methods for calculating dates. The plugin uses the same [date types](https://www.11ty.dev/docs/dates/) as Eleventy - `Last Modified`, `Created`, `git Last Modified`, `git Created`.
 
@@ -63,5 +63,35 @@ const { TIMESTAMPS } = require('@web-alchemy/eleventy-plugin-content-dates');
 module.exports = {
   createdAt: TIMESTAMPS.GIT_CREATED,
   updatedAt: TIMESTAMPS.GIT_LAST_MODIFIED
+}
+```
+
+## Low level usage example
+
+```javascript
+// .eleventy.js
+
+const { EleventyPluginContentDates } = require('@web-alchemy/eleventy-plugin-content-dates');
+
+module.exports = function(eleventyConfig) {
+  eleventyConfig.addPlugin(EleventyPluginContentDates, {
+    fields: []
+  });
+}
+```
+
+```javascript
+// index.11tydata.js
+const { TIMESTAMPS, computeDate } = require('@web-alchemy/eleventy-plugin-content-dates');
+
+module.exports = {
+  eleventyComputed: {
+    customDateField: function(data) {
+      return computeDate({
+        strategy: TIMESTAMPS.GIT_LAST_MODIFIED,
+        contentPath: data?.page?.inputPath
+      })
+    },
+  }
 }
 ```
