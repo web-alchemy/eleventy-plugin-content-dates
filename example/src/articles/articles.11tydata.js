@@ -3,8 +3,10 @@ const { TIMESTAMPS } = require('../../../.eleventy.js');
 module.exports = {
   layout: 'main-layout.njk',
 
-  createdAt: TIMESTAMPS.GIT_CREATED,
-  updatedAt: TIMESTAMPS.LAST_MODIFIED,
+  createdAtFS: TIMESTAMPS.GIT_CREATED,
+  updatedAtFS: TIMESTAMPS.FS_LAST_MODIFIED,
+  createdAtGit: TIMESTAMPS.GIT_CREATED,
+  updatedAtGit: TIMESTAMPS.GIT_LAST_MODIFIED,
 
   eleventyComputed: {
     permalink: function(data) {

@@ -2,13 +2,15 @@ const { EleventyPluginContentDates, getContentFolderPath } = require('../.eleven
 
 module.exports = function(eleventyConfig) {
   eleventyConfig.addPlugin(EleventyPluginContentDates, {
-    fields: ['createdAt', 'updatedAt'],
-    getContentPath: getContentFolderPath
+    getContentPath: getContentFolderPath,
   });
 
   return {
     dir: {
       input: 'src'
-    }
+    },
+    templateFormats: ['html', 'njk', 'md'],
+    markdownTemplateEngine: 'njk',
+    htmlTemplateEngine: 'njk',
   }
 }

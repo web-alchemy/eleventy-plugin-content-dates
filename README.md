@@ -1,6 +1,6 @@
-# eleventy-plugin-content-dates
+# Eleventy plugin for content dates
 
-Static site generator [Eleventy](https://www.11ty.dev/docs/dates/) uses a special data field `date` with predefined values `Created`, `Last Modified`, `git Created`, `git Last Modified` to sort collections.
+Static site generator [Eleventy](https://www.11ty.dev/docs/dates/) uses a special data field `date` with predefined values `Created`, `Last Modified`, `git Created`, `git Last Modified` to sort collections and show post date.
 
 But there are two problems here:
 - it is not possible to use several fields at the same time, for example, for the creation date and for the modification date,
@@ -17,33 +17,64 @@ npm install @web-alchemy/eleventy-plugin-content-dates
 ## Configuration
 
 ```javascript
-const {
-  EleventyPluginContentDates,
-  getContentFolderPath
-} = require('@web-alchemy/eleventy-plugin-content-dates');
+const { eleventyPluginContentDates } = require('@web-alchemy/eleventy-plugin-content-dates');
 
 module.exports = function(eleventyConfig) {
-  // all settings are optional
-  eleventyConfig.addPlugin(EleventyPluginContentDates, {
-    // Data fields in which dates will be substituted. By default it is 'createdAt', 'updatedAt'.
-    fields: ['createdAt', 'updatedAt'],
+  eleventyConfig.addPlugin(eleventyPluginContentDates);
+}
+```
+
+By default, dates are calculated for a file with the path `data.page.inputPath`. But you can change the path to the entity for which you need to calculate dates, for example, for a folder. Sometimes you need to calculate dates for folders, as they may contain other resources, for example, pictures. You can use the `getContentFolderPath` function from the plugin or write your own.
+
+```javascript
+const { eleventyPluginContentDates, getContentFolderPath } = require('@web-alchemy/eleventy-plugin-content-dates');
+
+module.exports = function(eleventyConfig) {
+  eleventyConfig.addPlugin(eleventyPluginContentDates, {
+    // this is default
+    getContentPath: (data) => {
+      return data.page.inputPath;
+    }
     
-    // By default, dates are calculated for a file with the path `data?.page?.inputPath`. But you can change the path to the entity for which you need to calculate dates, for example, for a folder. Sometimes you need to calculate dates for folders, as they may contain other resources, for example, pictures. You can use the `getContentFolderPath` function from the plugin or write your own.
-    getContentPath: function (data) {
-      return data?.page?.inputPath;
+    // you can compute dates for folders using library function `getContentFolderPath`
+    getContentPath: getContentFolderPath
+    
+    // or write your own logic for getting path
+    getContentPath: async (data) => {
+      // `data` - is Eleventy data
+      // function can be async
     }
   });
 }
 ```
 
-## Usage example
+By default, library uses are async functions from modules `node:fs` and `node:child_process`. You can use sync version of this functions;
 
-After the field names have been specified in the plugin settings (By default it is `createdAt`, `updatedAt`), you can specify the methods for calculating dates. The plugin uses the same [date types](https://www.11ty.dev/docs/dates/) as Eleventy - `Last Modified`, `Created`, `git Last Modified`, `git Created`.
+```javascript
+const { eleventyPluginContentDates, MODE } = require('@web-alchemy/eleventy-plugin-content-dates');
+
+module.exports = function(eleventyConfig) {
+  eleventyConfig.addPlugin(eleventyPluginContentDates, {
+    mode: MODE.SYNC
+  });
+}
+```
+
+## Usage
+
+The plugin uses specials values for date fields:
+
+- `Date. FS. Created` - the date of creation file received from the file system
+- `Date. FS. Last Modified` - the date of modification file received from the file system
+- `Date. Git. Created` - the date of creation file received from the git
+- `Date. Git. Last Modified` - the date of modification file received from the git
+
+Using in frontmatter:
 
 ```nunjucks
 ---
-createdAt: git Created
-updatedAt: git Last Modified,
+createdAt: 'Date. Git. Created'
+updatedAt: 'Date. Git. Last Modified'
 ---
 
 <time datetime="{{ createdAt.toISOString()}}">
@@ -55,41 +86,43 @@ updatedAt: git Last Modified,
 </time>
 ```
 
-It is more convenient to specify the fields in `11tydata`-files:
+Using in `11tydata`-files:
 
 ```javascript
 const { TIMESTAMPS } = require('@web-alchemy/eleventy-plugin-content-dates');
 
 module.exports = {
-  createdAt: TIMESTAMPS.GIT_CREATED,
-  updatedAt: TIMESTAMPS.GIT_LAST_MODIFIED
+  createdAtWithFS: TIMESTAMPS.FS_CREATED,
+  updatedAtWithFS: TIMESTAMPS.FS_LAST_MODIFIED,
+  createdAtWithGit: TIMESTAMPS.GIT_CREATED,
+  updatedAtWithGit: TIMESTAMPS.GIT_LAST_MODIFIED,
 }
 ```
 
 ## Low level usage example
 
-```javascript
-// .eleventy.js
-
-const { EleventyPluginContentDates } = require('@web-alchemy/eleventy-plugin-content-dates');
-
-module.exports = function(eleventyConfig) {
-  eleventyConfig.addPlugin(EleventyPluginContentDates, {
-    fields: []
-  });
-}
-```
+You can use `@web-alchemy/eleventy-plugin-content-dates` as a library without registering the plugin:
 
 ```javascript
 // index.11tydata.js
-const { TIMESTAMPS, computeDate } = require('@web-alchemy/eleventy-plugin-content-dates');
+const path = require('node:path');
+const { TIMESTAMPS, MODE, computeDate } = require('@web-alchemy/eleventy-plugin-content-dates');
 
 module.exports = {
   eleventyComputed: {
-    customDateField: function(data) {
-      return computeDate({
+    yourCustomDateField: async function(data) {
+      return await computeDate({
         strategy: TIMESTAMPS.GIT_LAST_MODIFIED,
-        contentPath: data?.page?.inputPath
+        mode: MODE.ASYNC,
+        contentPath: path.dirname(data.page.inputPath),
+      })
+    },
+    
+    yourAnotherCustomDateField: function(data) {      
+      return computeDate({
+        strategy: TIMESTAMPS.FS_CREATED,
+        mode: MODE.SYNC,
+        contentPath: data.page.inputPath,
       })
     },
   }

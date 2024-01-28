@@ -1,19 +1,11 @@
 <article>
   <header>
-    <h1>
-      {{ title }}
-      <sup>{{ version }}</sup>
-    </h1>
-
-    {% if createdAt %}
-      <time>created: {{ createdAt }}</time>
-    {% endif %}
-
-    {% if updatedAt %}
-      <time>updated: {{ updatedAt }}</time>
-    {% endif %}
+    <h1>{{ title }} <sup>{{ version }}</sup></h1>
+    <time>createdAtFS: {{ createdAtFS }}</time>
+    <time>updatedAtFS: {{ updatedAtFS }}</time>
+    <time>createdAtGit: {{ createdAtGit }}</time>
+    <time>updatedAtGit: {{ updatedAtGit }}</time>
   </header>
-
   <main>
     {{ content | safe }}
   </main>
