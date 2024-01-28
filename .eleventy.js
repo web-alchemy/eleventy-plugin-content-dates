@@ -22,7 +22,7 @@ const MODE = {
 };
 
 const strategiesSync = {
-  [TIMESTAMPS.FS_LAST_MODIFIEDLAST_MODIFIED](contentPath) {
+  [TIMESTAMPS.FS_LAST_MODIFIED](contentPath) {
     const stats = fs.statSync(contentPath);
     return stats.isFile() ? stats.mtime : getFolderModifiedDateSync(contentPath);
   },
