@@ -128,3 +128,25 @@ module.exports = {
   }
 }
 ```
+
+## Caveats of use on CI/CD
+
+Many CI/CD tools, such as [Github Actions Checkout](https://github.com/actions/checkout), by default does a shallow clone and dates may be incorrect.
+
+Solutions:
+
+- Make deep clone with `fetch-depth: '0'`:
+  ```yaml
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: '0'
+  ```
+  This is also helpful, if you use git creation dates. But with this method, all branches and tags are pulled out, not just the history of one branch.
+- Write your own git commands. Just example:
+  ```yaml
+  - name: Checkout
+    run: |
+      git clone --depth 1 <REPO> .
+      git fetch --unshallow
+  ```
