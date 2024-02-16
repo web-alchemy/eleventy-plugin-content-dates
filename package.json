@@ -6,7 +6,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@11ty/eleventy": ">=2.0.0"
+    "@11ty/eleventy": ">=2.0.0 || ^3.0.0 || ^3.0.0-alpha"
   },
   "scripts": {
     "postpublish": "git push origin --all; git push origin --tags",
