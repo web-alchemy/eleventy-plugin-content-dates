@@ -1,6 +1,6 @@
 {
   "name": "@web-alchemy/eleventy-plugin-content-dates",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": ".eleventy.js",
   "publishConfig": {
     "access": "public"
