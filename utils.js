@@ -3,15 +3,13 @@ const path = require('node:path');
 const { execFileSync, execFile } = require('node:child_process');
 const util = require('node:util');
 
-function runCommandSync(command) {
-  const [bin, ...args] = command.split(' ');
+function runCommandSync(bin, args) {
   return execFileSync(bin, args, {
     encoding: 'utf-8'
   });
 }
 
-async function runCommand(command) {
-  const [bin, ...args] = command.split(' ');
+async function runCommand(bin, args) {
   const { stdout } = await util.promisify(execFile)(bin, args, {
     encoding: 'utf-8'
   });
